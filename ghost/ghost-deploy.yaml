@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog
+  labels:
+    app: blog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blog
+  template:
+    metadata:
+      labels:
+        app: blog
+    spec:
+      containers:
+        - image: ghost:2.9.1-alpine
+          name: ghost
+          env:
+          - name: database__connection__password
+            valueFrom:
+              secretKeyRef:
+                name: mysql
+                key: password
+          - name: database__client
+            value: mysql
+          - name: database__connection__host
+            value: mysql
+          - name: database__connection__user
+            value: root
+          - name: database__connection__database
+            value: ghost
+          - name: url
+            value: http://blog.kumarutsavanand.com
+          ports:
+            - containerPort: 2368
+              name: ghost
+          volumeMounts:
+            - name: ghost-persistent-storage
+              mountPath: /var/lib/ghost/content
+      volumes:
+        - name: ghost-persistent-storage
+          persistentVolumeClaim:
+            claimName: nfs
+            readOnly: false
